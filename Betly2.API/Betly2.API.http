@@ -1,0 +1,6 @@
+@Betly2.API_HostAddress = http://localhost:5106
+
+GET {{Betly2.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
