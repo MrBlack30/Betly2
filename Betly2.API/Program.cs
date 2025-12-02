@@ -1,6 +1,5 @@
-
+using Betly.data; // Ensure this is present to access BetlyContext
 using Microsoft.EntityFrameworkCore;
-using Betly.Data; // Ensure this is present to access BetlyContext
 
 var builder = WebApplication.CreateBuilder(args);
 

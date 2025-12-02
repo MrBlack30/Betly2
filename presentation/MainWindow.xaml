@@ -1,0 +1,36 @@
+﻿<Window x:Class="Betly.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Betly Registration" Height="300" Width="400" 
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="User Registration" 
+                   FontSize="24" FontWeight="Bold" Margin="0,0,0,20" 
+                   HorizontalAlignment="Center"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Email:" VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <TextBox x:Name="EmailInput" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" Height="25"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Password:" VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <PasswordBox x:Name="PasswordInput" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" Height="25"/>
+
+        <TextBlock x:Name="StatusText" Grid.Row="3" Grid.ColumnSpan="2" Foreground="Red" Margin="0,10,0,10" 
+                   TextAlignment="Center"/>
+
+        <Button Grid.Row="4" Grid.ColumnSpan="2" Content="Register" 
+                Click="RegisterButton_Click" Height="35" Margin="0,10,0,0" 
+                Background="#2563EB" Foreground="White" FontWeight="SemiBold"/>
+    </Grid>
+</Window>
