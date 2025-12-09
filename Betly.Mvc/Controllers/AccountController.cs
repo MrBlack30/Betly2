@@ -7,7 +7,7 @@ namespace Betly.Mvc.Controllers
     public class AccountController : Controller
     {
         // CRITICAL: Ensure this URL matches your Betly.Api project's running address
-        private const string ApiBaseUrl = "https://localhost:7001";
+        private const string ApiBaseUrl = "https://localhost:7203";
         private readonly HttpClient _httpClient;
 
         // Dependency Injection for HttpClient is preferred, but simple init works too

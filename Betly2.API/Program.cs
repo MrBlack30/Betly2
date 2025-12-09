@@ -11,11 +11,21 @@ var connectionString = builder.Configuration.GetConnectionString("BetlyDbConnect
 builder.Services.AddDbContext<BetlyContext>(options =>
     options.UseSqlServer(connectionString));
 
+// Register Repositories
+builder.Services.AddScoped<Betly.core.Interfaces.IUserRepository, Betly.data.Repositories.UserRepository>();
+
 // Add services to the container (Controllers, Swagger, etc.)
 builder.Services.AddControllers();
 // ... rest of the file
 
 var app = builder.Build();
+
+// Apply pending migrations at startup
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<BetlyContext>();
+//    await dbContext.Database.MigrateAsync();
+//}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
