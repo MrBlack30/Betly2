@@ -39,4 +39,28 @@ public class UserController : ControllerBase
         // 4. Return success (exclude the password hash from the response)
         return Ok(new { message = "Registration successful." });
     }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest model)
+    {
+        var user = await _userRepository.GetByEmailAsync(model.Email);
+        if (user == null)
+        {
+            return Unauthorized(new { message = "Invalid email or password." });
+        }
+
+        // Verify Password
+        var passwordHash = PasswordHasher.HashPassword(model.Password);
+        if (user.PasswordHash != passwordHash)
+        {
+            return Unauthorized(new { message = "Invalid email or password." });
+        }
+
+        // Return the user details (excluding password)
+        return Ok(new 
+        { 
+            message = "Login successful", 
+            user = new { user.Id, user.Email, user.Balance } 
+        });
+    }
 }

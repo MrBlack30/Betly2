@@ -67,14 +67,69 @@ namespace Betly.Mvc.Controllers
             }
         }
 
-        // Dummy Login Action (for redirect target)
-        public IActionResult Login()
+    // Login Action (GET /Account/Login)
+    [HttpGet]
+    public IActionResult Login()
+    {
+        if (TempData["SuccessMessage"] != null)
         {
-            if (TempData["SuccessMessage"] != null)
+            ViewBag.Message = TempData["SuccessMessage"];
+        }
+        return View();
+    }
+
+    // Login Action (POST /Account/Login)
+    [HttpPost]
+    public async Task<IActionResult> Login(LoginRequest model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        try
+        {
+            string url = $"{ApiBaseUrl}/api/users/login";
+            var response = await _httpClient.PostAsJsonAsync(url, model);
+
+            if (response.IsSuccessStatusCode)
             {
-                ViewBag.Message = TempData["SuccessMessage"];
+                // Create user identity
+                var claims = new List<System.Security.Claims.Claim>
+                {
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, model.Email),
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, model.Email)
+                };
+
+                var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+                {
+                    IsPersistent = true
+                };
+
+                await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignInAsync(
+                    HttpContext,
+                    Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme, 
+                    new System.Security.Claims.ClaimsPrincipal(claimsIdentity), 
+                    authProperties);
+
+                return RedirectToAction("Index", "Home");
             }
-            return View();
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return View(model);
+            }
+        }
+        catch (Exception)
+        {
+            ModelState.AddModelError(string.Empty, "An error occurred while communicating with the API.");
+            return View(model);
         }
     }
+
+    public async Task<IActionResult> Logout()
+    {
+        await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Login");
+    }
+}
 }
