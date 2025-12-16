@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Betly.core.DTOs; // Use the DTO from your Core project
+using Betly.core.Models;
 using System.Net.Http.Json; // For PostAsJsonAsync
 
 namespace Betly.Mvc.Controllers
@@ -111,7 +112,7 @@ namespace Betly.Mvc.Controllers
                     new System.Security.Claims.ClaimsPrincipal(claimsIdentity), 
                     authProperties);
 
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Dashboard", "Account");
             }
             else
             {
@@ -123,6 +124,28 @@ namespace Betly.Mvc.Controllers
         {
             ModelState.AddModelError(string.Empty, "An error occurred while communicating with the API.");
             return View(model);
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Dashboard()
+    {
+        var email = User.Identity?.Name;
+        if (string.IsNullOrEmpty(email))
+        {
+            return RedirectToAction("Login");
+        }
+
+        try
+        {
+            string url = $"{ApiBaseUrl}/api/users/{email}/bets";
+            var bets = await _httpClient.GetFromJsonAsync<List<Bet>>(url);
+            return View(bets);
+        }
+        catch (Exception)
+        {
+            ModelState.AddModelError(string.Empty, "Could not fetch bets.");
+            return View(new List<Bet>());
         }
     }
 

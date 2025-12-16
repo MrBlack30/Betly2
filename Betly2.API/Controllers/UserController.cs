@@ -57,10 +57,18 @@ public class UserController : ControllerBase
         }
 
         // Return the user details (excluding password)
+
         return Ok(new 
         { 
             message = "Login successful", 
             user = new { user.Id, user.Email, user.Balance } 
         });
+    }
+
+    [HttpGet("{email}/bets")]
+    public async Task<IActionResult> GetBets(string email)
+    {
+        var bets = await _userRepository.GetBetsByEmailAsync(email);
+        return Ok(bets);
     }
 }

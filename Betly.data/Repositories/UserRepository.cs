@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Betly.core.Interfaces;
 using Betly.core.Models;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,14 @@ namespace Betly.data.Repositories
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
+        }
+
+        public async Task<List<Bet>> GetBetsByEmailAsync(string email)
+        {
+            return await _context.Users
+                .Where(u => u.Email == email)
+                .SelectMany(u => u.Bets)
+                .ToListAsync();
         }
     }
 }
