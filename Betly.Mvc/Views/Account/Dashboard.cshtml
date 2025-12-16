@@ -1,0 +1,55 @@
+@model List<Betly.core.Models.Bet>
+
+@{
+    ViewData["Title"] = "Account Dashboard";
+}
+
+<div class="container mt-5">
+    <h2>My Account</h2>
+    <div class="row">
+        <div class="col-md-12">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-header">
+                    <h4>My Bets</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Bet ID</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var bet in Model)
+                                {
+                                    <tr>
+                                        <td>@bet.Id</td>
+                                        <td>@bet.Amount.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p>You have no bets yet.</p>
+                    }
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                 <a asp-action="Logout" asp-controller="Account" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>

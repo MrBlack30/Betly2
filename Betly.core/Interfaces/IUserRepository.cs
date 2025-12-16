@@ -1,4 +1,6 @@
 
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Betly.core.Models;
 
 namespace Betly.core.Interfaces
@@ -8,5 +10,6 @@ namespace Betly.core.Interfaces
     {
         Task<User> GetByEmailAsync(string email);
         Task<User> AddUserAsync(User user);
+        Task<List<Bet>> GetBetsByEmailAsync(string email);
     }
 }
