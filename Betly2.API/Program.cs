@@ -1,41 +1,60 @@
-using Betly.data; // Ensure this is present to access BetlyContext
+using Betly.data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Retrieve the connection string from appsettings.json
+// 1. הגדרת מסד הנתונים
 var connectionString = builder.Configuration.GetConnectionString("BetlyDbConnection");
-
-// Register the BetlyContext with the Dependency Injection container
-// and configure it to use SQL Server with the connection string.
 builder.Services.AddDbContext<BetlyContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Register Repositories
+// 2. חיבור ה-Repository
 builder.Services.AddScoped<Betly.core.Interfaces.IUserRepository, Betly.data.Repositories.UserRepository>();
 
-// Add services to the container (Controllers, Swagger, etc.)
+// 3. הגדרת מנגנון האימות (JWT Authentication)
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
 builder.Services.AddControllers();
-// ... rest of the file
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Apply pending migrations at startup
-//using (var scope = app.Services.CreateScope())
-//{
-//    var dbContext = scope.ServiceProvider.GetRequiredService<BetlyContext>();
-//    await dbContext.Database.MigrateAsync();
-//}
-
-// Configure the HTTP request pipeline.
+// הגדרות סביבת פיתוח
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+// --- סדר חשוב מאוד! ---
+app.UseAuthentication(); // קודם בודקים מי המשתמש
+app.UseAuthorization();  // אחר כך בודקים מה מותר לו לעשות
 
 app.MapControllers();
 
