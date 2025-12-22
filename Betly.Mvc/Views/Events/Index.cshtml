@@ -1,0 +1,51 @@
+@model List<Betly.core.Models.Event>
+
+@{
+    ViewData["Title"] = "Events";
+}
+
+<div class="container mt-4">
+    <h2>Upcoming Events</h2>
+    
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No events found.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="card-title mb-0">@item.Title</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">@item.Description</p>
+                            <p class="text-muted small">@item.Date.ToShortDateString() @item.Date.ToShortTimeString()</p>
+                            
+                            <div class="d-flex justify-content-between mb-3">
+                                <div class="text-center">
+                                    <strong>@item.TeamA</strong><br/>
+                                    <span class="badge bg-secondary">Odds: @item.OddsTeamA</span>
+                                </div>
+                                <div class="align-self-center">VS</div>
+                                <div class="text-center">
+                                    <strong>@item.TeamB</strong><br/>
+                                    <span class="badge bg-secondary">Odds: @item.OddsTeamB</span>
+                                </div>
+                            </div>
+                             <div class="text-center mb-2">
+                                <small>Draw Odds: @item.OddsDraw</small>
+                            </div>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a asp-action="PlaceBet" asp-route-id="@item.Id" class="btn btn-primary w-100">Place Bet</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

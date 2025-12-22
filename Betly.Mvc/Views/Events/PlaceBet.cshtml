@@ -1,0 +1,68 @@
+@model Betly.core.DTOs.BetRequest
+
+@{
+    ViewData["Title"] = "Place Bet";
+    var eventItem = ViewBag.Event as Betly.core.Models.Event;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3>Place Your Bet</h3>
+                </div>
+                <div class="card-body">
+                    @if (eventItem != null)
+                    {
+                        <div class="alert alert-light border">
+                            <h5>@eventItem.Title</h5>
+                            <p>@eventItem.Description</p>
+                            <div class="row text-center font-weight-bold">
+                                <div class="col">@eventItem.TeamA (@eventItem.OddsTeamA)</div>
+                                <div class="col">Draw (@eventItem.OddsDraw)</div>
+                                <div class="col">@eventItem.TeamB (@eventItem.OddsTeamB)</div>
+                            </div>
+                        </div>
+                    }
+
+                    <form asp-action="PlaceBet" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="EventId" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="SelectedOutcome" class="form-label">Pick Winner</label>
+                            <select asp-for="SelectedOutcome" class="form-select">
+                                <option value="">Select Outcome...</option>
+                                @if(eventItem != null) {
+                                    <option value="@eventItem.TeamA">@eventItem.TeamA (Odds: @eventItem.OddsTeamA)</option>
+                                    <option value="Draw">Draw (Odds: @eventItem.OddsDraw)</option>
+                                    <option value="@eventItem.TeamB">@eventItem.TeamB (Odds: @eventItem.OddsTeamB)</option>
+                                } else {
+                                     <option value="TeamA">Team A</option>
+                                     <option value="Draw">Draw</option>
+                                     <option value="TeamB">Team B</option>
+                                }
+                            </select>
+                            <span asp-validation-for="SelectedOutcome" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Amount" class="form-label">Wager Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Amount" class="form-control" type="number" step="1" min="1" />
+                            </div>
+                            <span asp-validation-for="Amount" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">Confirmation Bet</button>
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
