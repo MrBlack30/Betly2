@@ -24,5 +24,12 @@ namespace Betly.data.Repositories
         {
             return await _context.Events.FindAsync(id);
         }
+
+        public async Task<Event> AddEventAsync(Event eventItem)
+        {
+            _context.Events.Add(eventItem);
+            await _context.SaveChangesAsync();
+            return eventItem;
+        }
     }
 }

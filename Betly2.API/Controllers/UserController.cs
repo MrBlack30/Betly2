@@ -65,10 +65,35 @@ public class UserController : ControllerBase
         });
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUser(int id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null) return NotFound();
+
+        return Ok(new UserDto { Id = user.Id, Email = user.Email, Balance = user.Balance });
+    }
+
     [HttpGet("{email}/bets")]
     public async Task<IActionResult> GetBets(string email)
     {
         var bets = await _userRepository.GetBetsByEmailAsync(email);
         return Ok(bets);
+    }
+
+    [HttpPost("{id}/credit")]
+    public async Task<IActionResult> AddCredit(int id, [FromBody] AddCreditRequest request)
+    {
+        if (request.Amount <= 0)
+            return BadRequest(new { message = "Amount must be greater than zero." });
+
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null)
+            return NotFound(new { message = "User not found." });
+
+        user.Balance += request.Amount;
+        await _userRepository.UpdateUserAsync(user);
+
+        return Ok(new { message = "Credit added successfully.", newBalance = user.Balance });
     }
 }

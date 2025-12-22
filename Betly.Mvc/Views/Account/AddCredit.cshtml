@@ -1,31 +1,30 @@
-@model Betly.core.DTOs.AddCreditRequest
+@model Betly.core.DTOs.AddCreditRequest;
+
 @{
     ViewData["Title"] = "Add Credit";
 }
 
-<div class="row justify-content-center">
+<div class="row justify-content-center mt-5">
     <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h3 class="card-title mb-0">Add Credit to Account</h3>
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h3>Add Credit to Account</h3>
             </div>
             <div class="card-body">
                 <form asp-action="AddCredit" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    
-                    <div class="form-group mb-3">
-                        <label asp-for="Amount" class="control-label">Amount</label>
-                        <input asp-for="Amount" class="form-control" type="number" step="0.01" min="0.01" />
+
+                    <div class="form-group mb-4">
+                        <label asp-for="Amount" class="form-label">Amount to Add ($)</label>
+                        <input asp-for="Amount" class="form-control" type="number" min="1" step="0.01" />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group d-grid">
-                        <button type="submit" class="btn btn-success btn-lg">Add Credit</button>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Confirm Transaction</button>
+                        <a asp-action="Dashboard" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
-            </div>
-            <div class="card-footer text-center">
-                <a asp-action="Dashboard" class="text-decoration-none">Back to Dashboard</a>
             </div>
         </div>
     </div>

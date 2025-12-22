@@ -1,0 +1,80 @@
+@model Betly.core.Models.Event
+
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3>Create New Event</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="form-label">Event Title</label>
+                            <input asp-for="Title" class="form-control" placeholder="e.g. Champions League Final" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TeamA" class="form-label">Team A</label>
+                                <input asp-for="TeamA" class="form-control" />
+                                <span asp-validation-for="TeamA" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TeamB" class="form-label">Team B</label>
+                                <input asp-for="TeamB" class="form-control" />
+                                <span asp-validation-for="TeamB" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="OddsTeamA" class="form-label">Odds Team A</label>
+                                <input asp-for="OddsTeamA" class="form-control" type="number" step="0.01" min="1.01" />
+                                <span asp-validation-for="OddsTeamA" class="text-danger"></span>
+                            </div>
+                             <div class="col-md-4 mb-3">
+                                <label asp-for="OddsDraw" class="form-label">Odds Draw</label>
+                                <input asp-for="OddsDraw" class="form-control" type="number" step="0.01" min="1.01" />
+                                <span asp-validation-for="OddsDraw" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="OddsTeamB" class="form-label">Odds Team B</label>
+                                <input asp-for="OddsTeamB" class="form-control" type="number" step="0.01" min="1.01" />
+                                <span asp-validation-for="OddsTeamB" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Date" class="form-label">Event Date</label>
+                            <input asp-for="Date" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="Date" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Create Event</button>
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

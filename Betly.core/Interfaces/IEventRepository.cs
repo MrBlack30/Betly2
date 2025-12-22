@@ -8,5 +8,6 @@ namespace Betly.core.Interfaces
     {
         Task<List<Event>> GetAllEventsAsync();
         Task<Event> GetEventByIdAsync(int id);
+        Task<Event> AddEventAsync(Event eventItem);
     }
 }

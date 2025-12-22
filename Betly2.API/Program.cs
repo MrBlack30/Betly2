@@ -13,9 +13,15 @@ builder.Services.AddDbContext<BetlyContext>(options =>
 
 // Register Repositories
 builder.Services.AddScoped<Betly.core.Interfaces.IUserRepository, Betly.data.Repositories.UserRepository>();
+builder.Services.AddScoped<Betly.core.Interfaces.IEventRepository, Betly.data.Repositories.EventRepository>();
+builder.Services.AddScoped<Betly.core.Interfaces.IBetRepository, Betly.data.Repositories.BetRepository>();
 
 // Add services to the container (Controllers, Swagger, etc.)
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 // ... rest of the file
 
 var app = builder.Build();

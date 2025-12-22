@@ -31,5 +31,14 @@ namespace Betly2.API.Controllers
 
             return Ok(eventItem);
         }
+        [HttpPost]
+        public async Task<IActionResult> CreateEvent([FromBody] Betly.core.Models.Event eventItem)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var createdEvent = await _eventRepository.AddEventAsync(eventItem);
+            return CreatedAtAction(nameof(GetEventById), new { id = createdEvent.Id }, createdEvent);
+        }
     }
 }

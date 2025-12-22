@@ -97,8 +97,18 @@ namespace Betly.Mvc.Controllers
                 var claims = new List<System.Security.Claims.Claim>
                 {
                     new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, model.Email),
-                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, model.Email)
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, model.Email),
+                    // Assuming API returns user object with Id. We need to parse it from response.
+                    // The standard PostAsJsonAsync response reading is tricky if purely dynamic.
+                    // Need to deserialize response correctly first. 
                 };
+                
+                // Read response content to get User ID
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                 if (loginResponse?.User != null)
+                {
+                     claims.Add(new System.Security.Claims.Claim("UserId", loginResponse.User.Id.ToString()));
+                }
 
                 var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
                 var authProperties = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
@@ -138,14 +148,66 @@ namespace Betly.Mvc.Controllers
 
         try
         {
-            string url = $"{ApiBaseUrl}/api/users/{email}/bets";
-            var bets = await _httpClient.GetFromJsonAsync<List<Bet>>(url);
-            return View(bets);
+            var userId = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login");
+            
+            // Fetch User Details (Balance)
+            var userResponse = await _httpClient.GetFromJsonAsync<UserDto>($"{ApiBaseUrl}/api/users/{userId}");
+            
+            // Fetch Bets
+            var betsResponse = await _httpClient.GetFromJsonAsync<List<Bet>>($"{ApiBaseUrl}/api/users/{email}/bets");
+
+            var viewModel = new Betly.Mvc.Models.DashboardViewModel
+            {
+                User = userResponse ?? new UserDto(),
+                Bets = betsResponse ?? new List<Bet>()
+            };
+
+            return View(viewModel);
         }
         catch (Exception)
         {
-            ModelState.AddModelError(string.Empty, "Could not fetch bets.");
-            return View(new List<Bet>());
+            ModelState.AddModelError(string.Empty, "Could not fetch dashboard data.");
+            return View(new Betly.Mvc.Models.DashboardViewModel());
+        }
+    }
+
+    [HttpGet]
+    public IActionResult AddCredit()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddCredit(AddCreditRequest model)
+    {
+        if (model.Amount <= 0)
+        {
+            ModelState.AddModelError("Amount", "Amount must be positive.");
+            return View(model);
+        }
+
+        var userId = User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login");
+
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/users/{userId}/credit", model);
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Credit added successfully!";
+                return RedirectToAction("Dashboard");
+            }
+            else
+            {
+                ModelState.AddModelError("", "Failed to add credit.");
+                return View(model);
+            }
+        }
+        catch
+        {
+            ModelState.AddModelError("", "Service unavailable.");
+            return View(model);
         }
     }
 

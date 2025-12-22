@@ -103,5 +103,38 @@ namespace Betly.Mvc.Controllers
                 return View(model);
             }
         }
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Event model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/events", model);
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Event created successfully!";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    ModelState.AddModelError("", $"Failed to create event. Status: {response.StatusCode}. Details: {errorContent}");
+                    return View(model);
+                }
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Service unavailable.");
+                return View(model);
+            }
+        }
     }
 }
