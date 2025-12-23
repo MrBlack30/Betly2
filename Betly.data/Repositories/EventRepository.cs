@@ -31,5 +31,19 @@ namespace Betly.data.Repositories
             await _context.SaveChangesAsync();
             return eventItem;
         }
+
+        public async Task UpdateEventAsync(Event eventItem)
+        {
+            _context.Events.Update(eventItem);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Event?> GetEventWithBetsByIdAsync(int id)
+        {
+            return await _context.Events
+                .Include(e => e.Bets)
+                .ThenInclude(b => b.User)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
     }
 }

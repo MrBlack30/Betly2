@@ -30,6 +30,10 @@ namespace Betly2.API.Controllers
 
             try
             {
+                var eventItem = await _eventRepository.GetEventByIdAsync(request.EventId);
+                if (eventItem == null) return NotFound(new { message = "Event not found." });
+                if (eventItem.IsResolved) return BadRequest(new { message = "Event is already resolved." });
+
                 var bet = new Bet
                 {
                     UserId = request.UserId,

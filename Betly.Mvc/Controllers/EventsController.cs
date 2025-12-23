@@ -136,5 +136,70 @@ namespace Betly.Mvc.Controllers
                 return View(model);
             }
         }
+        [HttpGet]
+        public async Task<IActionResult> Resolve(int id)
+        {
+            try
+            {
+                var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{id}");
+                if (eventItem == null) return NotFound();
+                return View(eventItem);
+            }
+            catch
+            {
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Resolve(int EventId, string WinningOutcome)
+        {
+            if (string.IsNullOrEmpty(WinningOutcome))
+            {
+                ModelState.AddModelError("", "Please select a winning outcome.");
+                 // Re-fetch event for display
+                try
+                {
+                    var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{EventId}");
+                    return View(eventItem);
+                }
+                catch { return RedirectToAction("Index"); }
+            }
+
+            try
+            {
+                var request = new ResolveEventRequest { WinningOutcome = WinningOutcome };
+                var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/events/{EventId}/resolve", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Event resolved and payouts distributed!";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                     var error = await response.Content.ReadAsStringAsync();
+                     ModelState.AddModelError("", "Failed to resolve event: " + error);
+                      // Re-fetch event for display
+                    try
+                    {
+                        var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{EventId}");
+                        return View(eventItem);
+                    }
+                    catch { return RedirectToAction("Index"); }
+                }
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Error communicating with server.");
+                 // Re-fetch event for display
+                try
+                {
+                    var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{EventId}");
+                    return View(eventItem);
+                }
+                catch { return RedirectToAction("Index"); }
+            }
+        }
     }
 }

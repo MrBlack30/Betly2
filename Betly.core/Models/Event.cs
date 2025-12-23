@@ -15,6 +15,12 @@ namespace Betly.core.Models
         public decimal OddsTeamB { get; set; }
         public decimal OddsDraw { get; set; }
 
+        public bool IsResolved { get; set; } = false;
+        public string? Winner { get; set; } // "TeamA", "TeamB", "Draw"
+
+        public int OwnerId { get; set; } // FK to User
+
+
         // Navigation property
         public ICollection<Bet> Bets { get; set; } = new List<Bet>();
     }

@@ -9,10 +9,36 @@ namespace Betly2.API.Controllers
     public class EventsController : ControllerBase
     {
         private readonly IEventRepository _eventRepository;
+        private readonly Betly.core.Services.BettingService _bettingService;
 
-        public EventsController(IEventRepository eventRepository)
+        public EventsController(IEventRepository eventRepository, Betly.core.Services.BettingService bettingService)
         {
             _eventRepository = eventRepository;
+            _bettingService = bettingService;
+        }
+
+        [HttpPost("{id}/resolve")]
+        public async Task<IActionResult> ResolveEvent(int id, [FromBody] Betly.core.DTOs.ResolveEventRequest request)
+        {
+             try
+            {
+                var eventItem = await _eventRepository.GetEventByIdAsync(id);
+                if (eventItem == null) return NotFound(new { message = "Event not found" });
+
+                // Check authorization
+                var userIdStr = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdStr) || int.Parse(userIdStr) != eventItem.OwnerId)
+                {
+                    return Unauthorized(new { message = "Only the event owner can resolve this event." });
+                }
+
+                await _bettingService.ResolveEventAsync(id, request.WinningOutcome);
+                return Ok(new { message = "Event resolved successfully" });
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet]
