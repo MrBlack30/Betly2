@@ -45,5 +45,12 @@ namespace Betly.data.Repositories
                 .ThenInclude(b => b.User)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
+
+        public async Task<List<Event>> GetEventsByOwnerAsync(int ownerId)
+        {
+            return await _context.Events
+                .Where(e => e.OwnerId == ownerId)
+                .ToListAsync();
+        }
     }
 }

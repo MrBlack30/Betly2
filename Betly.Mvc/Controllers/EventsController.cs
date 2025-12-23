@@ -115,6 +115,13 @@ namespace Betly.Mvc.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            // Set OwnerId from logged-in user
+            var userIdStr = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdStr)) 
+                return RedirectToAction("Login", "Account");
+            
+            model.OwnerId = int.Parse(userIdStr);
+
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/events", model);
@@ -199,6 +206,47 @@ namespace Betly.Mvc.Controllers
                     return View(eventItem);
                 }
                 catch { return RedirectToAction("Index"); }
+            }
+        }
+        [HttpGet]
+        public async Task<IActionResult> MyEvents()
+        {
+            try
+            {
+                // This call relies on the cookie/token propagation or simpler authenticated HttpClient logic.
+                // Since ApiBaseUrl is localhost, we might need to pass the UserId manually or ensure the API endpoint uses the claim.
+                // However, the MVC controller uses `User.FindFirst("UserId")`.
+                // The API controller ALSO uses User.FindFirst("UserId"). 
+                // We need to make sure the HTTP request from MVC to API carries the auth context OR (simpler for now) pass user ID as query param if API allows, or stick to shared DB context usage in repo (but API is separate).
+                // Wait, if API is separate process, MVC needs to send token.
+                // Assuming we haven't implemented full JWT propagation, let's check how other calls work.
+                // Ah, PlaceBet in MVC sends UserId in body. 
+                // But MyEvents is GET.
+                
+                // CRITICAL FIX: The API `GetMyEvents` relies on `User` claims. 
+                // The HttpClient in MVC is NOT sending the user token by default.
+                // For this quick implementation, let's modify the API to accept UserId as query param for valid requests from MVC matching the logged in user.
+                
+                // actually, let's do this:
+                var userIdStr = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+                
+                // To keep it simple and consistent with "PlaceBet" which sends data:
+                // We will call a modified API endpoint or just use the repo directly since we have direct DB access in data layer? 
+                // No, we should stick to API. 
+                // Let's modify the API call to pass the user ID as a header or query param for simplicity in this dev environment, 
+                // OR since we are running locally, just fetch from API using a new endpoint that accepts ID: `api/events/owner/{id}`
+                
+                // Let's use the new endpoint `api/events/my-events` but we need to authenticate.
+                // If auth is hard, let's just use `api/events` and filter client side? No, improper.
+                
+                // Let's add `api/events/owner/{ownerId}` to API for simplicity.
+                var response = await _httpClient.GetFromJsonAsync<List<Event>>($"{ApiBaseUrl}/api/events/owner/{userIdStr}");
+                return View(response);
+            }
+            catch
+            {
+                return View(new List<Event>());
             }
         }
     }

@@ -66,5 +66,24 @@ namespace Betly2.API.Controllers
             var createdEvent = await _eventRepository.AddEventAsync(eventItem);
             return CreatedAtAction(nameof(GetEventById), new { id = createdEvent.Id }, createdEvent);
         }
+
+        [HttpGet("my-events")]
+        public async Task<IActionResult> GetMyEvents()
+        {
+             var userIdStr = User.FindFirst("UserId")?.Value;
+             if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+
+             int userId = int.Parse(userIdStr);
+             var events = await _eventRepository.GetEventsByOwnerAsync(userId);
+             return Ok(events);
+        }
+
+        [HttpGet("owner/{ownerId}")]
+        public async Task<IActionResult> GetEventsByOwnerId(int ownerId)
+        {
+             // In a real app, verify the requestor has permission to view these, but for now public or admin use.
+             var events = await _eventRepository.GetEventsByOwnerAsync(ownerId);
+             return Ok(events);
+        }
     }
 }

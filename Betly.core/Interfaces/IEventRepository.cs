@@ -11,5 +11,6 @@ namespace Betly.core.Interfaces
         Task<Event> AddEventAsync(Event eventItem);
         Task UpdateEventAsync(Event eventItem);
         Task<Event?> GetEventWithBetsByIdAsync(int id);
+        Task<List<Event>> GetEventsByOwnerAsync(int ownerId);
     }
 }
