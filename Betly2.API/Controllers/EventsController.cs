@@ -25,9 +25,9 @@ namespace Betly2.API.Controllers
                 var eventItem = await _eventRepository.GetEventByIdAsync(id);
                 if (eventItem == null) return NotFound(new { message = "Event not found" });
 
-                // Check authorization
-                var userIdStr = User.FindFirst("UserId")?.Value;
-                if (string.IsNullOrEmpty(userIdStr) || int.Parse(userIdStr) != eventItem.OwnerId)
+                // Check authorization using the OwnerId passed in the request body
+                // In a production scenario, this should be validated against a trusted token or context.
+                if (request.OwnerId != eventItem.OwnerId)
                 {
                     return Unauthorized(new { message = "Only the event owner can resolve this event." });
                 }

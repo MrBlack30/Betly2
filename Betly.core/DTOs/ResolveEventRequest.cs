@@ -6,5 +6,6 @@ namespace Betly.core.DTOs
     {
         [Required]
         public string WinningOutcome { get; set; } = string.Empty;
+        public int OwnerId { get; set; }
     }
 }

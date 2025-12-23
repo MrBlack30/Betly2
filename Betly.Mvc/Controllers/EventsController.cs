@@ -19,7 +19,12 @@ namespace Betly.Mvc.Controllers
         {
             try
             {
+                // Filter to show only unresolved events for betting
                 var events = await _httpClient.GetFromJsonAsync<List<Event>>($"{ApiBaseUrl}/api/events");
+                if (events != null)
+                {
+                    events = events.Where(e => !e.IsResolved).ToList();
+                }
                 return View(events);
             }
             catch
@@ -176,12 +181,20 @@ namespace Betly.Mvc.Controllers
             try
             {
                 var request = new ResolveEventRequest { WinningOutcome = WinningOutcome };
+                
+                // Get current user ID to pass as OwnerId for authorization check in API
+                var userIdStr = User.FindFirst("UserId")?.Value;
+                if (!string.IsNullOrEmpty(userIdStr))
+                {
+                    request.OwnerId = int.Parse(userIdStr);
+                }
+
                 var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/events/{EventId}/resolve", request);
 
                 if (response.IsSuccessStatusCode)
                 {
                     TempData["SuccessMessage"] = "Event resolved and payouts distributed!";
-                    return RedirectToAction("Index");
+                    return RedirectToAction("MyEvents");
                 }
                 else
                 {

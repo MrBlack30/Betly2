@@ -13,6 +13,18 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Select Winner</h5>
+                    @if (Model.IsResolved)
+                    {
+                        <div class="alert alert-warning">
+                            <h4 class="alert-heading">Event Resolved!</h4>
+                            <p>This event has already been resolved.</p>
+                            <hr>
+                            <p class="mb-0">Winner: <strong>@Model.Winner</strong></p>
+                        </div>
+                        <a asp-action="MyEvents" class="btn btn-secondary w-100">Back to My Events</a>
+                    }
+                    else
+                    {
                     <form asp-action="Resolve" method="post">
                         <input type="hidden" name="EventId" value="@Model.Id" />
                         
@@ -28,6 +40,7 @@
 
                         <button type="submit" class="btn btn-warning w-100">Confirm Resolution</button>
                     </form>
+                    }
                     <div class="mt-3">
                         <span class="text-danger">Warning: This action cannot be undone. Winners will be paid out immediately.</span>
                     </div>
