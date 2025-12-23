@@ -15,7 +15,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                     <div class="form-group mb-4">
-                        <label asp-for="Amount" class="form-label">Amount to Add ($)</label>
+                        <label asp-for="Amount" class="form-label">Amount to Add (@System.Globalization.CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol)</label>
                         <input asp-for="Amount" class="form-control" type="number" min="1" step="0.01" />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>

@@ -50,7 +50,7 @@
                         <div class="form-group mb-3">
                             <label asp-for="Amount" class="form-label">Wager Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">@System.Globalization.CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>
                                 <input asp-for="Amount" class="form-control" type="number" step="1" min="1" />
                             </div>
                             <span asp-validation-for="Amount" class="text-danger"></span>
