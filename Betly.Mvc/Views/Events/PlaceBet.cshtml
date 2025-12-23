@@ -32,16 +32,16 @@
 
                         <div class="form-group mb-3">
                             <label asp-for="SelectedOutcome" class="form-label">Pick Winner</label>
-                            <select asp-for="SelectedOutcome" class="form-select">
-                                <option value="">Select Outcome...</option>
+                            <select asp-for="SelectedOutcome" class="form-select" id="outcomeSelect">
+                                <option value="" data-odds="0">Select Outcome...</option>
                                 @if(eventItem != null) {
-                                    <option value="@eventItem.TeamA">@eventItem.TeamA (Odds: @eventItem.OddsTeamA)</option>
-                                    <option value="Draw">Draw (Odds: @eventItem.OddsDraw)</option>
-                                    <option value="@eventItem.TeamB">@eventItem.TeamB (Odds: @eventItem.OddsTeamB)</option>
+                                    <option value="@eventItem.TeamA" data-odds="@eventItem.OddsTeamA">@eventItem.TeamA (Odds: @eventItem.OddsTeamA)</option>
+                                    <option value="Draw" data-odds="@eventItem.OddsDraw">Draw (Odds: @eventItem.OddsDraw)</option>
+                                    <option value="@eventItem.TeamB" data-odds="@eventItem.OddsTeamB">@eventItem.TeamB (Odds: @eventItem.OddsTeamB)</option>
                                 } else {
-                                     <option value="TeamA">Team A</option>
-                                     <option value="Draw">Draw</option>
-                                     <option value="TeamB">Team B</option>
+                                     <option value="TeamA" data-odds="1.5">Team A</option>
+                                     <option value="Draw" data-odds="3.0">Draw</option>
+                                     <option value="TeamB" data-odds="2.0">Team B</option>
                                 }
                             </select>
                             <span asp-validation-for="SelectedOutcome" class="text-danger"></span>
@@ -51,13 +51,13 @@
                             <label asp-for="Amount" class="form-label">Wager Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">@System.Globalization.CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>
-                                <input asp-for="Amount" class="form-control" type="number" step="1" min="1" />
+                                <input asp-for="Amount" class="form-control" type="number" step="1" min="1" id="wagerAmount" />
                             </div>
                             <span asp-validation-for="Amount" class="text-danger"></span>
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">Confirmation Bet</button>
+                            <button type="button" class="btn btn-success btn-lg" onclick="showReviewModal()">Review & Place Bet</button>
                             <a asp-action="Index" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
@@ -66,3 +66,69 @@
         </div>
     </div>
 </div>
+
+<!-- Bet Review Modal -->
+<div class="modal fade" id="betReviewModal" tabindex="-1" aria-labelledby="betReviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="betReviewModalLabel">Confirm Your Bet</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Outcome:</span>
+                <strong id="reviewOutcome">--</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Odds:</span>
+                <strong id="reviewOdds">--</strong>
+            </li>
+             <li class="list-group-item d-flex justify-content-between">
+                <span>Wager:</span>
+                <strong id="reviewWager">--</strong>
+            </li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Edit</button>
+        <button type="button" class="btn btn-success" onclick="submitBet()">Confirm & Place Bet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function showReviewModal() {
+        var outcomeSelect = document.getElementById("outcomeSelect");
+        var wagerInput = document.getElementById("wagerAmount");
+        
+        var selectedOption = outcomeSelect.options[outcomeSelect.selectedIndex];
+        var outcome = selectedOption.value;
+        var odds = parseFloat(selectedOption.getAttribute("data-odds"));
+        var amount = parseFloat(wagerInput.value);
+
+        // Basic Validation
+        if (!outcome || isNaN(amount) || amount <= 0) {
+            alert("Please select a valid outcome and enter a wager amount greater than 0.");
+            return;
+        }
+
+        // Populate Modal
+        document.getElementById("reviewOutcome").innerText = outcome;
+        document.getElementById("reviewOdds").innerText = odds.toFixed(2);
+
+        // Format Currency
+        var currencySymbol = '@System.Globalization.NumberFormatInfo.CurrentInfo.CurrencySymbol';
+        document.getElementById("reviewWager").innerText = currencySymbol + amount.toFixed(2);
+
+        // Show Modal
+        var myModal = new bootstrap.Modal(document.getElementById('betReviewModal'));
+        myModal.show();
+    }
+
+    function submitBet() {
+        document.querySelector("form").submit();
+    }
+</script>
