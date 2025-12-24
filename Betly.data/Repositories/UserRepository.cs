@@ -46,5 +46,11 @@ namespace Betly.data.Repositories
                 .SelectMany(u => u.Bets)
                 .ToListAsync();
         }
+
+        public async Task AddTransactionAsync(Transaction transaction)
+        {
+            _context.Transactions.Add(transaction);
+            await _context.SaveChangesAsync();
+        }
     }
 }

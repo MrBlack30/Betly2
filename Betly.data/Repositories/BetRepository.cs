@@ -38,6 +38,16 @@ namespace Betly.data.Repositories
                 
                 // Add bet
                 _context.Bets.Add(bet);
+
+                // Log Transaction
+                _context.Transactions.Add(new Transaction
+                {
+                    UserId = user.Id,
+                    Type = "Bet",
+                    Amount = -bet.Amount, // Negative to verify spending
+                    BalanceAfter = user.Balance,
+                    Timestamp = System.DateTime.UtcNow
+                });
                 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();

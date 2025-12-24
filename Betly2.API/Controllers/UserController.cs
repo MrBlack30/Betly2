@@ -94,6 +94,16 @@ public class UserController : ControllerBase
         user.Balance += request.Amount;
         await _userRepository.UpdateUserAsync(user);
 
+        // Log Transaction
+        await _userRepository.AddTransactionAsync(new Transaction
+        {
+            UserId = user.Id,
+            Type = "Deposit",
+            Amount = request.Amount,
+            BalanceAfter = user.Balance,
+            Timestamp = DateTime.UtcNow
+        });
+
         return Ok(new { message = "Credit added successfully.", newBalance = user.Balance });
     }
 }

@@ -290,5 +290,23 @@ namespace Betly.Mvc.Controllers
 
         return RedirectToAction("Friends");
     }
+
+    [HttpGet]
+    public async Task<IActionResult> History()
+    {
+        var userIdStr = User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+
+        try
+        {
+            var transactions = await _httpClient.GetFromJsonAsync<List<Transaction>>($"{ApiBaseUrl}/api/transactions/{userIdStr}");
+            return View(transactions ?? new List<Transaction>());
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", "Could not load transaction history: " + ex.Message);
+            return View(new List<Transaction>());
+        }
+    }
 }
 }

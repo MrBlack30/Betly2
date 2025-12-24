@@ -13,5 +13,6 @@ namespace Betly.core.Interfaces
         Task<User> AddUserAsync(User user);
         Task UpdateUserAsync(User user);
         Task<List<Bet>> GetBetsByEmailAsync(string email);
+        Task AddTransactionAsync(Models.Transaction transaction);
     }
 }

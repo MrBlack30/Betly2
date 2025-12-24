@@ -8,6 +8,7 @@ namespace Betly.data
         public DbSet<Bet> Bets { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Event> Events { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
 
         public BetlyContext(DbContextOptions<BetlyContext> options) : base(options) { }
 
@@ -23,6 +24,15 @@ namespace Betly.data
             // Configure User.Balance - 18 digits total, 2 decimal places
             modelBuilder.Entity<User>()
                 .Property(u => u.Balance)
+                .HasPrecision(18, 2);
+
+            // Configure Transaction.Amount & BalanceAfter
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.Amount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.BalanceAfter)
                 .HasPrecision(18, 2);
         }
     }

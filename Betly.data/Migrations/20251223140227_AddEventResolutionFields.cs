@@ -11,6 +11,7 @@ namespace Betly.data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.DropForeignKey(
                 name: "FK_Bets_Users_UserId",
                 table: "Bets");
@@ -25,13 +26,16 @@ namespace Betly.data.Migrations
                 oldType: "int",
                 oldNullable: true);
 
+            
             migrationBuilder.AddColumn<int>(
                 name: "EventId",
                 table: "Bets",
                 type: "int",
                 nullable: false,
                 defaultValue: 0);
+            
 
+            
             migrationBuilder.AddColumn<string>(
                 name: "Outcome",
                 table: "Bets",
@@ -45,6 +49,7 @@ namespace Betly.data.Migrations
                 type: "nvarchar(max)",
                 nullable: false,
                 defaultValue: "");
+            
 
             migrationBuilder.CreateTable(
                 name: "Events",
@@ -88,6 +93,7 @@ namespace Betly.data.Migrations
                 principalTable: "Users",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
+            */
         }
 
         /// <inheritdoc />

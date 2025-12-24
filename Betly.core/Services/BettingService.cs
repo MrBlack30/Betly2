@@ -54,11 +54,15 @@ namespace Betly.core.Services
                     decimal winnings = winner.Amount + (shareRatio * totalLoserPool);
 
                     // Update User Balance
+                    int winnerUserId = 0;
+                    decimal currentBalance = 0;
+
+                    // Update User Balance
                     if (winner.User != null)
                     {
                         winner.User.Balance += winnings;
-                         // Force update if needed, but EF tracking should handle it if context is shared.
-                         // To be safe, we can inspect entry state or assume SaveChanges on eventItem cascades.
+                        winnerUserId = winner.User.Id;
+                        currentBalance = winner.User.Balance;
                     }
                     else
                     {
@@ -69,7 +73,21 @@ namespace Betly.core.Services
                             user.Balance += winnings;
                             // Explicitly update user if it was fetched separately
                             await _userRepository.UpdateUserAsync(user);
+                            winnerUserId = user.Id;
+                            currentBalance = user.Balance;
                         }
+                    }
+
+                    if (winnerUserId > 0)
+                    {
+                        await _userRepository.AddTransactionAsync(new Transaction
+                        {
+                            UserId = winnerUserId,
+                            Type = "Win",
+                            Amount = winnings,
+                            BalanceAfter = currentBalance,
+                            Timestamp = DateTime.UtcNow
+                        });
                     }
 
                     winner.Outcome = "Won";

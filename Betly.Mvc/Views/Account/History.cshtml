@@ -1,0 +1,62 @@
+@model List<Betly.core.Models.Transaction>
+
+@{
+    ViewData["Title"] = "Transaction History";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Transaction History</h2>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance After</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tx in Model)
+                            {
+                                <tr>
+                                    <td>@tx.Timestamp.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="badge @(tx.Type == "Deposit" ? "bg-info" : tx.Type == "Win" ? "bg-success" : "bg-warning text-dark")">
+                                            @tx.Type
+                                        </span>
+                                    </td>
+                                    <td class="@(tx.Amount >= 0 ? "text-success" : "text-danger") font-weight-bold">
+                                        @(tx.Amount >= 0 ? "+" : "")@tx.Amount.ToString("C")
+                                    </td>
+                                    <td>@tx.BalanceAfter.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <p class="text-muted">No transactions found.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
