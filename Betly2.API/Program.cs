@@ -15,6 +15,7 @@ builder.Services.AddDbContext<BetlyContext>(options =>
 builder.Services.AddScoped<Betly.core.Interfaces.IUserRepository, Betly.data.Repositories.UserRepository>();
 builder.Services.AddScoped<Betly.core.Interfaces.IEventRepository, Betly.data.Repositories.EventRepository>();
 builder.Services.AddScoped<Betly.core.Interfaces.IBetRepository, Betly.data.Repositories.BetRepository>();
+builder.Services.AddScoped<Betly.core.Interfaces.IFriendRepository, Betly.data.Repositories.FriendRepository>();
 builder.Services.AddScoped<Betly.core.Services.BettingService>();
 
 // Add services to the container (Controllers, Swagger, etc.)

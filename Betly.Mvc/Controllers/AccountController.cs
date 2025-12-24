@@ -216,5 +216,79 @@ namespace Betly.Mvc.Controllers
         await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Login");
     }
+
+    // --- Friends System Actions ---
+
+    [HttpGet]
+    public async Task<IActionResult> Friends()
+    {
+        var userIdStr = User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+
+        try
+        {
+            var friends = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr}");
+            var requests = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr}/pending");
+
+            ViewBag.Friends = friends ?? new List<Friendship>();
+            ViewBag.Requests = requests ?? new List<Friendship>();
+        }
+        catch
+        {
+            ViewBag.Friends = new List<Friendship>();
+            ViewBag.Requests = new List<Friendship>();
+            ModelState.AddModelError("", "Could not load friends data.");
+        }
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddFriend(string email)
+    {
+        var userIdStr = User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            ModelState.AddModelError("", "Email is required.");
+            return RedirectToAction("Friends");
+        }
+
+        var request = new FriendRequestDTO { TargetEmail = email };
+        var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/friends/{userIdStr}/request", request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            TempData["SuccessMessage"] = "Friend request sent!";
+        }
+        else
+        {
+            var msg = await response.Content.ReadAsStringAsync();
+            TempData["ErrorMessage"] = "Failed to send request: " + msg;
+        }
+
+        return RedirectToAction("Friends");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AcceptFriend(int requestId)
+    {
+        var userIdStr = User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+
+        var response = await _httpClient.PostAsync($"{ApiBaseUrl}/api/friends/{userIdStr}/accept/{requestId}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            TempData["SuccessMessage"] = "Friend request accepted!";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = "Failed to accept request.";
+        }
+
+        return RedirectToAction("Friends");
+    }
 }
 }
