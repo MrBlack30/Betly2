@@ -292,14 +292,24 @@ namespace Betly.Mvc.Controllers
     }
 
     [HttpGet]
-    public async Task<IActionResult> History()
+    public async Task<IActionResult> History(string? type = null, DateTime? startDate = null, DateTime? endDate = null)
     {
         var userIdStr = User.FindFirst("UserId")?.Value;
         if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
 
         try
         {
-            var transactions = await _httpClient.GetFromJsonAsync<List<Transaction>>($"{ApiBaseUrl}/api/transactions/{userIdStr}");
+            var url = $"{ApiBaseUrl}/api/transactions/{userIdStr}?";
+            if (!string.IsNullOrEmpty(type)) url += $"type={type}&";
+            if (startDate.HasValue) url += $"startDate={startDate.Value:O}&";
+            if (endDate.HasValue) url += $"endDate={endDate.Value:O}&";
+
+            var transactions = await _httpClient.GetFromJsonAsync<List<Transaction>>(url);
+            
+            ViewBag.Type = type;
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+
             return View(transactions ?? new List<Transaction>());
         }
         catch (Exception ex)

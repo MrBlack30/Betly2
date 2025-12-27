@@ -10,6 +10,34 @@
         <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
     </div>
 
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="Deposit" selected="@(ViewBag.Type == "Deposit")">Deposit</option>
+                        <option value="Bet" selected="@(ViewBag.Type == "Bet")">Bet</option>
+                        <option value="Win" selected="@(ViewBag.Type == "Win")">Win</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" name="startDate" id="startDate" class="form-control" value="@ViewBag.StartDate" />
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" name="endDate" id="endDate" class="form-control" value="@ViewBag.EndDate" />
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                    <a asp-action="History" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="alert alert-danger">
