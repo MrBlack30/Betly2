@@ -1,109 +1,145 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Betly.core.DTOs;
 using Betly.core.Interfaces;
 using Betly.core.Models;
 using Betly.Api.Utilities; // For PasswordHasher
 
-[ApiController]
-[Route("api/users")]
-public class UserController : ControllerBase
+namespace Betly.Api.Controllers
 {
-    private readonly IUserRepository _userRepository;
-
-    // Dependency Injection: Framework provides the UserRepository
-    public UserController(IUserRepository userRepository)
+    [ApiController]
+    [Route("api/users")]
+    public class UserController : ControllerBase
     {
-        _userRepository = userRepository;
-    }
+        private readonly IUserRepository _userRepository;
 
-    [HttpPost("register")] // Route: POST /api/users/register
-    public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
-    {
-        // 1. Check if user already exists
-        if (await _userRepository.GetByEmailAsync(model.Email) != null)
+        // Dependency Injection: Framework provides the UserRepository
+        public UserController(IUserRepository userRepository)
         {
-            return BadRequest(new { message = "Email is already registered." });
+            _userRepository = userRepository;
         }
 
-        // 2. Hash Password and create User entity
-        var newUser = new User
+        [HttpPost("register")] // Route: POST /api/users/register
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
         {
-            Email = model.Email,
-            PasswordHash = PasswordHasher.HashPassword(model.Password),
-            Balance = 0.00m // Default starting balance
-        };
+            // 1. Check if user already exists
+            if (await _userRepository.GetByEmailAsync(model.Email) != null)
+            {
+                return BadRequest(new { message = "Email is already registered." });
+            }
 
-        // 3. Save to database
-        await _userRepository.AddUserAsync(newUser);
+            // 2. Hash Password and create User entity
+            var newUser = new User
+            {
+                Email = model.Email,
+                PasswordHash = PasswordHasher.HashPassword(model.Password),
+                Balance = 0.00m // Default starting balance
+            };
 
-        // 4. Return success (exclude the password hash from the response)
-        return Ok(new { message = "Registration successful." });
-    }
+            // 3. Save to database
+            await _userRepository.AddUserAsync(newUser);
 
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest model)
-    {
-        var user = await _userRepository.GetByEmailAsync(model.Email);
-        if (user == null)
-        {
-            return Unauthorized(new { message = "Invalid email or password." });
+            // 4. Return success (exclude the password hash from the response)
+            return Ok(new { message = "Registration successful." });
         }
 
-        // Verify Password
-        var passwordHash = PasswordHasher.HashPassword(model.Password);
-        if (user.PasswordHash != passwordHash)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
-            return Unauthorized(new { message = "Invalid email or password." });
+            var user = await _userRepository.GetByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Invalid email or password." });
+            }
+
+            // Verify Password
+            var passwordHash = PasswordHasher.HashPassword(model.Password);
+            if (user.PasswordHash != passwordHash)
+            {
+                return Unauthorized(new { message = "Invalid email or password." });
+            }
+
+            // Return the user details (excluding password)
+            return Ok(new
+            {
+                message = "Login successful",
+                user = new { user.Id, user.Email, user.Balance }
+            });
         }
 
-        // Return the user details (excluding password)
-
-        return Ok(new
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUser(int id)
         {
-            message = "Login successful",
-            user = new { user.Id, user.Email, user.Balance }
-        });
-    }
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetUser(int id)
-    {
-        var user = await _userRepository.GetByIdAsync(id);
-        if (user == null) return NotFound();
+            return Ok(new UserDto { Id = user.Id, Email = user.Email, Balance = user.Balance });
+        }
 
-        return Ok(new UserDto { Id = user.Id, Email = user.Email, Balance = user.Balance });
-    }
-
-    [HttpGet("{email}/bets")]
-    public async Task<IActionResult> GetBets(string email)
-    {
-        var bets = await _userRepository.GetBetsByEmailAsync(email);
-        return Ok(bets);
-    }
-
-    [HttpPost("{id}/credit")]
-    public async Task<IActionResult> AddCredit(int id, [FromBody] AddCreditRequest request)
-    {
-        if (request.Amount <= 0)
-            return BadRequest(new { message = "Amount must be greater than zero." });
-
-        var user = await _userRepository.GetByIdAsync(id);
-        if (user == null)
-            return NotFound(new { message = "User not found." });
-
-        user.Balance += request.Amount;
-        await _userRepository.UpdateUserAsync(user);
-
-        // Log Transaction
-        await _userRepository.AddTransactionAsync(new Transaction
+        [HttpGet("{email}/bets")]
+        public async Task<IActionResult> GetBets(string email)
         {
-            UserId = user.Id,
-            Type = "Deposit",
-            Amount = request.Amount,
-            BalanceAfter = user.Balance,
-            Timestamp = DateTime.UtcNow
-        });
+            var bets = await _userRepository.GetBetsByEmailAsync(email);
+            return Ok(bets);
+        }
 
-        return Ok(new { message = "Credit added successfully.", newBalance = user.Balance });
+        [HttpPost("{id}/credit")]
+        public async Task<IActionResult> AddCredit(int id, [FromBody] AddCreditRequest request)
+        {
+            if (request.Amount <= 0)
+                return BadRequest(new { message = "Amount must be greater than zero." });
+
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            user.Balance += request.Amount;
+            await _userRepository.UpdateUserAsync(user);
+
+            // Log Transaction
+            await _userRepository.AddTransactionAsync(new Transaction
+            {
+                UserId = user.Id,
+                Type = "Deposit",
+                Amount = request.Amount,
+                BalanceAfter = user.Balance,
+                Timestamp = DateTime.UtcNow
+            });
+
+            return Ok(new { message = "Credit added successfully.", newBalance = user.Balance });
+        }
+
+        // NEW: Update User Properties (Email, Password)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest model)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            // 1. Update Email if provided and different
+            if (!string.IsNullOrWhiteSpace(model.Email) && model.Email != user.Email)
+            {
+                // Ensure the new email isn't already taken by another user
+                var existingUser = await _userRepository.GetByEmailAsync(model.Email);
+                if (existingUser != null)
+                {
+                    return BadRequest(new { message = "Email is already in use." });
+                }
+                user.Email = model.Email;
+            }
+
+            // 2. Update Password if provided
+            if (!string.IsNullOrWhiteSpace(model.Password))
+            {
+                user.PasswordHash = PasswordHasher.HashPassword(model.Password);
+            }
+
+            // 3. Save changes
+            await _userRepository.UpdateUserAsync(user);
+
+            return Ok(new { message = "User updated successfully.", user = new { user.Id, user.Email, user.Balance } });
+        }
     }
 }
