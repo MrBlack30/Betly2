@@ -17,12 +17,12 @@ namespace Betly.data.Repositories
 
         public async Task<List<Event>> GetAllEventsAsync()
         {
-            return await _context.Events.ToListAsync();
+            return await _context.Events.Include(e => e.Owner).ToListAsync();
         }
 
         public async Task<Event> GetEventByIdAsync(int id)
         {
-            return await _context.Events.FindAsync(id);
+            return await _context.Events.Include(e => e.Owner).FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<Event> AddEventAsync(Event eventItem)
@@ -46,9 +46,18 @@ namespace Betly.data.Repositories
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 
+        public async Task<List<Event>> GetVisibleEventsAsync(int currentUserId, List<int> friendIds)
+        {
+            return await _context.Events
+                .Include(e => e.Owner)
+                .Where(e => e.IsPublic || e.OwnerId == currentUserId || friendIds.Contains(e.OwnerId))
+                .ToListAsync();
+        }
+
         public async Task<List<Event>> GetEventsByOwnerAsync(int ownerId)
         {
             return await _context.Events
+                .Include(e => e.Owner)
                 .Where(e => e.OwnerId == ownerId)
                 .ToListAsync();
         }

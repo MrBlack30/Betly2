@@ -3,6 +3,7 @@
     ViewData["Title"] = "My Friends";
     var friends = ViewBag.Friends as List<Friendship>;
     var requests = ViewBag.Requests as List<Friendship>;
+    var sentRequests = ViewBag.SentRequests as List<Friendship>;
 }
 
 <style>
@@ -47,7 +48,7 @@
                         var friendUser = f.RequesterId.ToString() == User.FindFirst("UserId")?.Value ? f.Addressee : f.Requester;
                         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
                              <div class="d-flex align-items-center">
-                                <div class="avatar-circle me-3">@friendUser?.Email[0].ToString().ToUpper()</div>
+                                <div class="avatar-circle me-3">@(!string.IsNullOrEmpty(friendUser?.Email) ? friendUser.Email[0].ToString().ToUpper() : "?")</div>
                                 <div>
                                     <h6 class="mb-0">@(friendUser?.Email ?? "Unknown User")</h6>
                                     <small class="text-muted">Friends since @f.CreatedAt.ToShortDateString()</small>
@@ -96,6 +97,24 @@
                                         <input type="hidden" name="requestId" value="@r.Id" />
                                         <button type="submit" class="btn btn-sm btn-primary">Accept</button>
                                     </form>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            @if (sentRequests != null && sentRequests.Any())
+            {
+                <div class="card mt-4">
+                    <div class="card-header bg-info text-dark">Sent Requests</div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var r in sentRequests)
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>To: <strong>@r.Addressee?.Email</strong></span>
+                                    <span class="badge bg-secondary">Pending</span>
                                 </div>
                             </li>
                         }

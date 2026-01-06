@@ -19,8 +19,16 @@ namespace Betly.Mvc.Controllers
         {
             try
             {
+                var userIdStr = User.FindFirst("UserId")?.Value;
+                string url = $"{ApiBaseUrl}/api/events";
+                
+                if (!string.IsNullOrEmpty(userIdStr))
+                {
+                    url += $"?userId={userIdStr}";
+                }
+
                 // Filter to show only unresolved events for betting
-                var events = await _httpClient.GetFromJsonAsync<List<Event>>($"{ApiBaseUrl}/api/events");
+                var events = await _httpClient.GetFromJsonAsync<List<Event>>(url);
                 if (events != null)
                 {
                     events = events.Where(e => !e.IsResolved).ToList();

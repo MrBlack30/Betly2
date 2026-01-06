@@ -42,18 +42,12 @@ namespace Betly.data.Repositories
             using var connection = CreateConnection();
             var sql = @"
                 SELECT f.*, 
-                       r.Id AS RId, r.Email AS REmail, 
-                       a.Id AS AId, a.Email AS AEmail
+                       r.Id, r.Email, 
+                       a.Id, a.Email
                 FROM Friendships f
                 JOIN Users r ON f.RequesterId = r.Id
                 JOIN Users a ON f.AddresseeId = a.Id
                 WHERE (f.RequesterId = @UserId OR f.AddresseeId = @UserId) AND f.Status = 'Accepted'";
-
-            // Mapping to populate user details if needed, for simplicity let's just return the friendship
-            // Ideally we join to get friends details.
-            // Let's assume we want to fill the 'Friend' details into one of the User slots?
-            // Actually, let's keep it simple and just do a multi-map if possible or just return relations.
-            // Given the simple requirement "see all his friends", let's load friend info.
             
             var friendships = await connection.QueryAsync<Friendship, User, User, Friendship>(
                 sql,
@@ -64,7 +58,7 @@ namespace Betly.data.Repositories
                     return friendship;
                 },
                 new { UserId = userId },
-                splitOn: "RId,AId"
+                splitOn: "Id,Id"
             );
             
             return friendships.ToList();
@@ -76,7 +70,7 @@ namespace Betly.data.Repositories
             // Incoming requests: Requester is someone else, Addressee is ME.
             var sql = @"
                 SELECT f.*, 
-                       r.Id AS RId, r.Email AS REmail
+                       r.Id, r.Email
                 FROM Friendships f
                 JOIN Users r ON f.RequesterId = r.Id
                 WHERE f.AddresseeId = @UserId AND f.Status = 'Pending'";
@@ -89,7 +83,32 @@ namespace Betly.data.Repositories
                     return friendship;
                 },
                 new { UserId = userId },
-                splitOn: "RId"
+                splitOn: "Id"
+            );
+
+            return requests.ToList();
+        }
+
+        public async Task<List<Friendship>> GetSentRequestsByUserIdAsync(int userId)
+        {
+            using var connection = CreateConnection();
+            // Outgoing requests: Requester is ME, Addressee is someone else.
+            var sql = @"
+                SELECT f.*, 
+                       a.Id, a.Email
+                FROM Friendships f
+                JOIN Users a ON f.AddresseeId = a.Id
+                WHERE f.RequesterId = @UserId AND f.Status = 'Pending'";
+
+             var requests = await connection.QueryAsync<Friendship, User, Friendship>(
+                sql,
+                (friendship, addressee) =>
+                {
+                    friendship.Addressee = addressee;
+                    return friendship;
+                },
+                new { UserId = userId },
+                splitOn: "Id"
             );
 
             return requests.ToList();

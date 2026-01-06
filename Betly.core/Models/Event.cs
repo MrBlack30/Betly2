@@ -19,6 +19,8 @@ namespace Betly.core.Models
         public string? Winner { get; set; } // "TeamA", "TeamB", "Draw"
 
         public int OwnerId { get; set; } // FK to User
+        public User? Owner { get; set; } // Navigation property
+        public bool IsPublic { get; set; } = true;
 
 
         // Navigation property

@@ -104,5 +104,12 @@ namespace Betly2.API.Controllers
             var requests = await _friendRepository.GetPendingRequestsByUserIdAsync(userId);
             return Ok(requests);
         }
+
+        [HttpGet("{userId}/sent")]
+        public async Task<IActionResult> GetSentRequests(int userId)
+        {
+            var requests = await _friendRepository.GetSentRequestsByUserIdAsync(userId);
+            return Ok(requests);
+        }
     }
 }

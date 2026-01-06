@@ -27,6 +27,12 @@
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
 
+                        <div class="form-check mb-3">
+                            <input asp-for="IsPublic" class="form-check-input" />
+                            <label asp-for="IsPublic" class="form-check-label">Public Event</label>
+                            <div class="form-text">Public events are visible to everyone. Private events are only visible to you and your friends.</div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="TeamA" class="form-label">Team A</label>

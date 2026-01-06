@@ -7,6 +7,7 @@ namespace Betly.core.Interfaces
     public interface IEventRepository
     {
         Task<List<Event>> GetAllEventsAsync();
+        Task<List<Event>> GetVisibleEventsAsync(int currentUserId, List<int> friendIds);
         Task<Event> GetEventByIdAsync(int id);
         Task<Event> AddEventAsync(Event eventItem);
         Task UpdateEventAsync(Event eventItem);

@@ -10,11 +10,13 @@ namespace Betly2.API.Controllers
     {
         private readonly IEventRepository _eventRepository;
         private readonly Betly.core.Services.BettingService _bettingService;
+        private readonly IFriendRepository _friendRepository;
 
-        public EventsController(IEventRepository eventRepository, Betly.core.Services.BettingService bettingService)
+        public EventsController(IEventRepository eventRepository, Betly.core.Services.BettingService bettingService, IFriendRepository friendRepository)
         {
             _eventRepository = eventRepository;
             _bettingService = bettingService;
+            _friendRepository = friendRepository;
         }
 
         [HttpPost("{id}/resolve")]
@@ -42,11 +44,35 @@ namespace Betly2.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllEvents()
+        public async Task<IActionResult> GetAllEvents([FromQuery] int? userId = null)
         {
-            var events = await _eventRepository.GetAllEventsAsync();
+            var userIdStr = User.FindFirst("UserId")?.Value;
+            var friendIds = new System.Collections.Generic.List<int>();
+            int effectiveUserId = 0;
+
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out var claimUserId))
+            {
+                effectiveUserId = claimUserId;
+            }
+            else if (userId.HasValue)
+            {
+                effectiveUserId = userId.Value;
+            }
+
+            if (effectiveUserId > 0)
+            {
+                 var friendships = await _friendRepository.GetFriendshipsByUserIdAsync(effectiveUserId);
+                 foreach(var f in friendships)
+                 {
+                     if(f.RequesterId != effectiveUserId) friendIds.Add(f.RequesterId);
+                     if(f.AddresseeId != effectiveUserId) friendIds.Add(f.AddresseeId);
+                 }
+            }
+
+            var events = await _eventRepository.GetVisibleEventsAsync(effectiveUserId, friendIds);
             return Ok(events);
         }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetEventById(int id)

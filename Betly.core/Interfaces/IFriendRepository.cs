@@ -9,6 +9,7 @@ namespace Betly.core.Interfaces
         Task<Friendship?> GetFriendshipAsync(int userAId, int userBId);
         Task<List<Friendship>> GetFriendshipsByUserIdAsync(int userId);
         Task<List<Friendship>> GetPendingRequestsByUserIdAsync(int userId);
+        Task<List<Friendship>> GetSentRequestsByUserIdAsync(int userId);
         Task AddFriendshipAsync(Friendship friendship);
         Task UpdateFriendshipAsync(Friendship friendship);
     }

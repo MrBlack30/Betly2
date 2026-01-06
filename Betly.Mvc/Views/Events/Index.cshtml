@@ -24,6 +24,10 @@
                         <div class="card-body">
                             <p class="card-text">@item.Description</p>
                             <p class="text-muted small">@item.Date.ToShortDateString() @item.Date.ToShortTimeString()</p>
+                            <div class="mb-2">
+                                <span class="badge @(item.IsPublic ? "bg-success" : "bg-warning text-dark")">@(item.IsPublic ? "Public" : "Private")</span>
+                                <small class="text-muted ms-2">Owner: @(item.Owner?.Email ?? "Unknown")</small>
+                            </div>
                             
                             <div class="d-flex justify-content-between mb-3">
                                 <div class="text-center">

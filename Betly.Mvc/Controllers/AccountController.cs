@@ -229,14 +229,17 @@ namespace Betly.Mvc.Controllers
         {
             var friends = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr}");
             var requests = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr}/pending");
+            var sentRequests = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr}/sent");
 
             ViewBag.Friends = friends ?? new List<Friendship>();
             ViewBag.Requests = requests ?? new List<Friendship>();
+            ViewBag.SentRequests = sentRequests ?? new List<Friendship>(); 
         }
         catch
         {
             ViewBag.Friends = new List<Friendship>();
             ViewBag.Requests = new List<Friendship>();
+            ViewBag.SentRequests = new List<Friendship>();
             ModelState.AddModelError("", "Could not load friends data.");
         }
 
@@ -316,6 +319,58 @@ namespace Betly.Mvc.Controllers
         {
             ModelState.AddModelError("", "Could not load transaction history: " + ex.Message);
             return View(new List<Transaction>());
+        }
+    }
+
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword(Betly.Mvc.Models.ChangePasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var userIdStr = User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) 
+        {
+             return RedirectToAction("Login", "Account");
+        }
+
+        try
+        {
+            var updateRequest = new UpdateUserRequest 
+            { 
+                Password = model.NewPassword 
+            };
+
+            var url = $"{ApiBaseUrl}/api/users/{userIdStr}";
+            var response = await _httpClient.PutAsJsonAsync(url, updateRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Password changed successfully!";
+                return RedirectToAction("Dashboard");
+            }
+            else
+            {
+                 var errorContent = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                 string errorMessage = errorContent != null && errorContent.ContainsKey("message") 
+                        ? errorContent["message"] 
+                        : "Failed to change password.";
+                ModelState.AddModelError(string.Empty, errorMessage);
+                return View(model);
+            }
+        }
+        catch (Exception)
+        {
+            ModelState.AddModelError(string.Empty, "An error occurred while changing the password.");
+            return View(model);
         }
     }
 }
