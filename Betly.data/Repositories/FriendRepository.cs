@@ -42,8 +42,10 @@ namespace Betly.data.Repositories
             using var connection = CreateConnection();
             var sql = @"
                 SELECT f.*, 
-                       r.Id, r.Email, 
-                       a.Id, a.Email
+                       r.Id, r.Email,
+                       (SELECT COALESCE((CAST(SUM(CASE WHEN Outcome = 'Won' THEN 1 ELSE 0 END) AS FLOAT) / NULLIF(COUNT(CASE WHEN Outcome IN ('Won', 'Lost') THEN 1 END), 0)) * 100, 0) FROM Bets WHERE UserId = r.Id) as WinRate,
+                       a.Id, a.Email,
+                       (SELECT COALESCE((CAST(SUM(CASE WHEN Outcome = 'Won' THEN 1 ELSE 0 END) AS FLOAT) / NULLIF(COUNT(CASE WHEN Outcome IN ('Won', 'Lost') THEN 1 END), 0)) * 100, 0) FROM Bets WHERE UserId = a.Id) as WinRate
                 FROM Friendships f
                 JOIN Users r ON f.RequesterId = r.Id
                 JOIN Users a ON f.AddresseeId = a.Id

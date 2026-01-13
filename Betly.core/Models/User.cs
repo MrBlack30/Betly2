@@ -1,4 +1,4 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Betly.core.Models
 {
@@ -11,6 +11,9 @@ namespace Betly.core.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public decimal Balance { get; set; } = 0.00m;
+
+        [NotMapped]
+        public double WinRate { get; set; }
 
         // Navigation properties (for EF Core relationships)
         public ICollection<Bet> Bets { get; set; } = new List<Bet>();
