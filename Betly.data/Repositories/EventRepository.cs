@@ -20,13 +20,34 @@ namespace Betly.data.Repositories
             return await _context.Events.Include(e => e.Owner).ToListAsync();
         }
 
-        public async Task<Event> GetEventByIdAsync(int id)
+        public async Task<List<Event>> GetVisibleEventsAsync(int currentUserId, List<int> friendIds)
         {
-            return await _context.Events.Include(e => e.Owner).FirstOrDefaultAsync(e => e.Id == id);
+            return await _context.Events
+                .Include(e => e.Owner)
+                .Where(e => e.IsPublic 
+                            || e.OwnerId == currentUserId 
+                            || e.InvitedUsers.Any(u => u.Id == currentUserId))
+                .ToListAsync();
         }
 
-        public async Task<Event> AddEventAsync(Event eventItem)
+        public async Task<Event> GetEventByIdAsync(int id)
         {
+            return await _context.Events
+                .Include(e => e.Owner)
+                .Include(e => e.InvitedUsers)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<Event> AddEventAsync(Event eventItem, List<int> invitedUserIds)
+        {
+            if (invitedUserIds != null && invitedUserIds.Any())
+            {
+                var invitedUsers = await _context.Users
+                    .Where(u => invitedUserIds.Contains(u.Id))
+                    .ToListAsync();
+                eventItem.InvitedUsers = invitedUsers;
+            }
+
             _context.Events.Add(eventItem);
             await _context.SaveChangesAsync();
             return eventItem;
@@ -44,14 +65,6 @@ namespace Betly.data.Repositories
                 .Include(e => e.Bets)
                 .ThenInclude(b => b.User)
                 .FirstOrDefaultAsync(e => e.Id == id);
-        }
-
-        public async Task<List<Event>> GetVisibleEventsAsync(int currentUserId, List<int> friendIds)
-        {
-            return await _context.Events
-                .Include(e => e.Owner)
-                .Where(e => e.IsPublic || e.OwnerId == currentUserId || friendIds.Contains(e.OwnerId))
-                .ToListAsync();
         }
 
         public async Task<List<Event>> GetEventsByOwnerAsync(int ownerId)

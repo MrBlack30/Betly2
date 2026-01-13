@@ -47,7 +47,11 @@ namespace Betly.Mvc.Controllers
             // Get Event details to show
             try
             {
-                var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{id}");
+                var userIdStr = User.FindFirst("UserId")?.Value;
+                var url = $"{ApiBaseUrl}/api/events/{id}";
+                if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+
+                var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                 if (eventItem == null) return NotFound();
 
                 ViewBag.Event = eventItem;
@@ -73,7 +77,9 @@ namespace Betly.Mvc.Controllers
                 // Re-fetch event for display
                  try
                 {
-                    var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{model.EventId}");
+                    var url = $"{ApiBaseUrl}/api/events/{model.EventId}";
+                    if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+                    var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                     ViewBag.Event = eventItem;
                 }
                 catch { }
@@ -96,7 +102,9 @@ namespace Betly.Mvc.Controllers
                     // Re-fetch event for display
                      try
                     {
-                        var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{model.EventId}");
+                        var url = $"{ApiBaseUrl}/api/events/{model.EventId}";
+                        if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+                        var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                         ViewBag.Event = eventItem;
                     }
                     catch { }
@@ -109,7 +117,9 @@ namespace Betly.Mvc.Controllers
                  // Re-fetch event for display
                  try
                 {
-                    var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{model.EventId}");
+                    var url = $"{ApiBaseUrl}/api/events/{model.EventId}";
+                    if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+                    var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                     ViewBag.Event = eventItem;
                 }
                 catch { }
@@ -117,27 +127,66 @@ namespace Betly.Mvc.Controllers
             }
         }
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            var userIdStr = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdStr)) 
+                return RedirectToAction("Login", "Account");
+
+            try
+            {
+                // Fetch friends to allow inviting them
+                var friendsList = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr}");
+                ViewBag.Friends = friendsList ?? new List<Friendship>();
+            }
+            catch
+            {
+                ViewBag.Friends = new List<Friendship>();
+            }
+
+            return View(new Event { Date = DateTime.Now.AddDays(1) });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Event model)
+        public async Task<IActionResult> Create(Event model, List<int> invitedUserIds)
         {
             if (!ModelState.IsValid)
+            {
+                 // Refetch friends for the view
+                var userIdStr1 = User.FindFirst("UserId")?.Value;
+                if (!string.IsNullOrEmpty(userIdStr1))
+                {
+                    try {
+                        var friendsList = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr1}");
+                        ViewBag.Friends = friendsList ?? new List<Friendship>();
+                    } catch { ViewBag.Friends = new List<Friendship>(); }
+                }
                 return View(model);
+            }
 
             // Set OwnerId from logged-in user
             var userIdStr = User.FindFirst("UserId")?.Value;
             if (string.IsNullOrEmpty(userIdStr)) 
                 return RedirectToAction("Login", "Account");
             
-            model.OwnerId = int.Parse(userIdStr);
+            var request = new CreateEventRequest
+            {
+                Title = model.Title,
+                Description = model.Description,
+                Date = model.Date,
+                TeamA = model.TeamA,
+                TeamB = model.TeamB,
+                OddsTeamA = model.OddsTeamA,
+                OddsTeamB = model.OddsTeamB,
+                OddsDraw = model.OddsDraw,
+                OwnerId = int.Parse(userIdStr),
+                IsPublic = model.IsPublic,
+                InvitedUserIds = invitedUserIds ?? new List<int>()
+            };
 
             try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/events", model);
+                var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/events", request);
                 if (response.IsSuccessStatusCode)
                 {
                     TempData["SuccessMessage"] = "Event created successfully!";
@@ -147,6 +196,13 @@ namespace Betly.Mvc.Controllers
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     ModelState.AddModelError("", $"Failed to create event. Status: {response.StatusCode}. Details: {errorContent}");
+                    
+                    // Refetch friends
+                     try {
+                        var friendsList = await _httpClient.GetFromJsonAsync<List<Friendship>>($"{ApiBaseUrl}/api/friends/{userIdStr}");
+                        ViewBag.Friends = friendsList ?? new List<Friendship>();
+                    } catch { ViewBag.Friends = new List<Friendship>(); }
+
                     return View(model);
                 }
             }
@@ -161,7 +217,11 @@ namespace Betly.Mvc.Controllers
         {
             try
             {
-                var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{id}");
+                var userIdStr = User.FindFirst("UserId")?.Value;
+                var url = $"{ApiBaseUrl}/api/events/{id}";
+                if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+
+                var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                 if (eventItem == null) return NotFound();
                 return View(eventItem);
             }
@@ -174,13 +234,18 @@ namespace Betly.Mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> Resolve(int EventId, string WinningOutcome)
         {
+            var userIdStr = User.FindFirst("UserId")?.Value;
+
             if (string.IsNullOrEmpty(WinningOutcome))
             {
                 ModelState.AddModelError("", "Please select a winning outcome.");
                  // Re-fetch event for display
                 try
                 {
-                    var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{EventId}");
+                    var url = $"{ApiBaseUrl}/api/events/{EventId}";
+                    if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+
+                    var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                     return View(eventItem);
                 }
                 catch { return RedirectToAction("Index"); }
@@ -191,7 +256,6 @@ namespace Betly.Mvc.Controllers
                 var request = new ResolveEventRequest { WinningOutcome = WinningOutcome };
                 
                 // Get current user ID to pass as OwnerId for authorization check in API
-                var userIdStr = User.FindFirst("UserId")?.Value;
                 if (!string.IsNullOrEmpty(userIdStr))
                 {
                     request.OwnerId = int.Parse(userIdStr);
@@ -211,7 +275,10 @@ namespace Betly.Mvc.Controllers
                       // Re-fetch event for display
                     try
                     {
-                        var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{EventId}");
+                        var url = $"{ApiBaseUrl}/api/events/{EventId}";
+                        if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+
+                        var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                         return View(eventItem);
                     }
                     catch { return RedirectToAction("Index"); }
@@ -223,7 +290,10 @@ namespace Betly.Mvc.Controllers
                  // Re-fetch event for display
                 try
                 {
-                    var eventItem = await _httpClient.GetFromJsonAsync<Event>($"{ApiBaseUrl}/api/events/{EventId}");
+                    var url = $"{ApiBaseUrl}/api/events/{EventId}";
+                    if (!string.IsNullOrEmpty(userIdStr)) url += $"?userId={userIdStr}";
+
+                    var eventItem = await _httpClient.GetFromJsonAsync<Event>(url);
                     return View(eventItem);
                 }
                 catch { return RedirectToAction("Index"); }

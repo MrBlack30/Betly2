@@ -27,21 +27,15 @@
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
 
-                        <div class="form-check mb-3">
-                            <input asp-for="IsPublic" class="form-check-input" />
-                            <label asp-for="IsPublic" class="form-check-label">Public Event</label>
-                            <div class="form-text">Public events are visible to everyone. Private events are only visible to you and your friends.</div>
-                        </div>
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="TeamA" class="form-label">Team A</label>
-                                <input asp-for="TeamA" class="form-control" />
+                                <input asp-for="TeamA" class="form-control" placeholder="Home Team" />
                                 <span asp-validation-for="TeamA" class="text-danger"></span>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label asp-for="TeamB" class="form-label">Team B</label>
-                                <input asp-for="TeamB" class="form-control" />
+                                <input asp-for="TeamB" class="form-control" placeholder="Away Team" />
                                 <span asp-validation-for="TeamB" class="text-danger"></span>
                             </div>
                         </div>
@@ -49,18 +43,18 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label asp-for="OddsTeamA" class="form-label">Odds Team A</label>
-                                <input asp-for="OddsTeamA" class="form-control" type="number" step="0.01" min="1.01" />
+                                <input asp-for="OddsTeamA" class="form-control" type="number" step="0.01" />
                                 <span asp-validation-for="OddsTeamA" class="text-danger"></span>
-                            </div>
-                             <div class="col-md-4 mb-3">
-                                <label asp-for="OddsDraw" class="form-label">Odds Draw</label>
-                                <input asp-for="OddsDraw" class="form-control" type="number" step="0.01" min="1.01" />
-                                <span asp-validation-for="OddsDraw" class="text-danger"></span>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label asp-for="OddsTeamB" class="form-label">Odds Team B</label>
-                                <input asp-for="OddsTeamB" class="form-control" type="number" step="0.01" min="1.01" />
+                                <input asp-for="OddsTeamB" class="form-control" type="number" step="0.01" />
                                 <span asp-validation-for="OddsTeamB" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="OddsDraw" class="form-label">Odds Draw</label>
+                                <input asp-for="OddsDraw" class="form-control" type="number" step="0.01" />
+                                <span asp-validation-for="OddsDraw" class="text-danger"></span>
                             </div>
                         </div>
 
@@ -68,6 +62,44 @@
                             <label asp-for="Date" class="form-label">Event Date</label>
                             <input asp-for="Date" class="form-control" type="datetime-local" />
                             <span asp-validation-for="Date" class="text-danger"></span>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="IsPublic" class="form-check-input" type="checkbox" id="isPublicCheckbox" checked />
+                            <label asp-for="IsPublic" class="form-check-label font-weight-bold">Public Event</label>
+                            <div class="form-text">If public, everyone can see and bet. If private, only you and your invited friends can.</div>
+                        </div>
+
+                        <div id="friendSelection" class="mb-4" style="display:none; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                            <h5>Invite Specific Friends</h5>
+                            <hr />
+                            @if (ViewBag.Friends != null && ((List<Betly.core.Models.Friendship>)ViewBag.Friends).Any())
+                            {
+                                <div class="row row-cols-1 row-cols-md-2 g-2">
+                                    @foreach (var friendship in (List<Betly.core.Models.Friendship>)ViewBag.Friends)
+                                    {
+                                        var currentUserId = User.FindFirst("UserId")?.Value;
+                                        var friend = (friendship.RequesterId.ToString() == currentUserId) ? friendship.Addressee : friendship.Requester;
+                                        if (friend != null)
+                                        {
+                                            <div class="col">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="invitedUserIds" value="@friend.Id" id="friend_@friend.Id">
+                                                    <label class="form-check-label" for="friend_@friend.Id">
+                                                        @friend.Email
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">You have no friends yet to invite. <a asp-controller="Account" asp-action="Friends" target="_blank">Add friends here</a></p>
+                            }
                         </div>
 
                         <div class="d-grid gap-2">
@@ -83,4 +115,18 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkbox = document.getElementById('isPublicCheckbox');
+            const selection = document.getElementById('friendSelection');
+
+            function updateFriendSelectionVisibility() {
+                // If public is UNCHECKED, show friend selection (it means its private)
+                selection.style.display = checkbox.checked ? 'none' : 'block';
+            }
+
+            checkbox.addEventListener('change', updateFriendSelectionVisibility);
+            updateFriendSelectionVisibility(); // Initial state
+        });
+    </script>
 }

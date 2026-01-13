@@ -34,6 +34,15 @@ namespace Betly2.API.Controllers
                 if (eventItem == null) return NotFound(new { message = "Event not found." });
                 if (eventItem.IsResolved) return BadRequest(new { message = "Event is already resolved." });
 
+                // Access check for private events
+                if (!eventItem.IsPublic)
+                {
+                    if (eventItem.OwnerId != request.UserId && !eventItem.InvitedUsers.Any(u => u.Id == request.UserId))
+                    {
+                        return Forbid("You are not invited to this private event.");
+                    }
+                }
+
                 var bet = new Bet
                 {
                     UserId = request.UserId,

@@ -75,21 +75,54 @@ namespace Betly2.API.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetEventById(int id)
+        public async Task<IActionResult> GetEventById(int id, [FromQuery] int? userId = null)
         {
             var eventItem = await _eventRepository.GetEventByIdAsync(id);
             if (eventItem == null)
                 return NotFound();
 
+            if (!eventItem.IsPublic)
+            {
+                var userIdStr = User.FindFirst("UserId")?.Value;
+                int effectiveUserId = 0;
+                if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out var claimUserId))
+                {
+                    effectiveUserId = claimUserId;
+                }
+                else if (userId.HasValue)
+                {
+                    effectiveUserId = userId.Value;
+                }
+
+                if (eventItem.OwnerId != effectiveUserId && !eventItem.InvitedUsers.Any(u => u.Id == effectiveUserId))
+                {
+                    return Forbid("You do not have access to this private event.");
+                }
+            }
+
             return Ok(eventItem);
         }
         [HttpPost]
-        public async Task<IActionResult> CreateEvent([FromBody] Betly.core.Models.Event eventItem)
+        public async Task<IActionResult> CreateEvent([FromBody] Betly.core.DTOs.CreateEventRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var createdEvent = await _eventRepository.AddEventAsync(eventItem);
+            var eventItem = new Betly.core.Models.Event
+            {
+                Title = request.Title,
+                Description = request.Description,
+                Date = request.Date,
+                TeamA = request.TeamA,
+                TeamB = request.TeamB,
+                OddsTeamA = request.OddsTeamA,
+                OddsTeamB = request.OddsTeamB,
+                OddsDraw = request.OddsDraw,
+                OwnerId = request.OwnerId,
+                IsPublic = request.IsPublic
+            };
+
+            var createdEvent = await _eventRepository.AddEventAsync(eventItem, request.InvitedUserIds);
             return CreatedAtAction(nameof(GetEventById), new { id = createdEvent.Id }, createdEvent);
         }
 

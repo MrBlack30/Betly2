@@ -25,5 +25,6 @@ namespace Betly.core.Models
 
         // Navigation property
         public ICollection<Bet> Bets { get; set; } = new List<Bet>();
+        public ICollection<User> InvitedUsers { get; set; } = new List<User>();
     }
 }

@@ -16,6 +16,16 @@ namespace Betly.data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configure Many-to-Many for Private Event Invitations
+            modelBuilder.Entity<Event>()
+                .HasMany(e => e.InvitedUsers)
+                .WithMany()
+                .UsingEntity<Dictionary<string, object>>(
+                    "EventInvitations",
+                    j => j.HasOne<User>().WithMany().HasForeignKey("UserId"),
+                    j => j.HasOne<Event>().WithMany().HasForeignKey("EventId")
+                );
+
             // Configure Bet.Amount - 18 digits total, 2 decimal places (e.g., $999,999,999,999,999.99)
             modelBuilder.Entity<Bet>()
                 .Property(b => b.Amount)
