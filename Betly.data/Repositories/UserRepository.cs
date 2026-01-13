@@ -44,6 +44,7 @@ namespace Betly.data.Repositories
             return await _context.Users
                 .Where(u => u.Email == email)
                 .SelectMany(u => u.Bets)
+                .Include(b => b.Event)
                 .ToListAsync();
         }
 

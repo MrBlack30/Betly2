@@ -57,7 +57,7 @@
                                 @foreach (var bet in Model.Bets)
                                 {
                                     <tr>
-                                        <td>Event #@bet.EventId</td> <!-- Ideally fetch Event Title too, but requires joined data -->
+                                        <td>@(bet.Event?.Title ?? $"Event #{bet.EventId}")</td>
                                         <td>@bet.SelectedOutcome</td>
                                         <td>@bet.Amount.ToString("C")</td>
                                         <td>
