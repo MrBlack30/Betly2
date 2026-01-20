@@ -29,30 +29,24 @@ namespace Betly.Tests.Selenium.Tests
 
         protected void RegisterAndLogin(string email, string password)
         {
-            // Register
+            // 1. Register
             var registerPage = new RegisterPage(Driver);
             registerPage.Navigate();
             registerPage.Register(email, password);
             
-            // Wait for redirect to Login
-            try 
-            {
-                var wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(5));
-                wait.Until(d => d.Url.Contains("Login"));
-            }
-            catch (WebDriverTimeoutException) 
-            {
-                // Ignore, might stay on page if error, will be caught by next step
-            }
+            // 2. Wait for redirect away from Register or to Login
+            Wait.Until(d => d.Url.Contains("Login") || d.Url.Contains("Dashboard") || !d.Url.Contains("Register"));
 
+            // 3. If we landed on Login, perform login
             if (Driver.Url.Contains("Login"))
             {
                  var loginPage = new LoginPage(Driver);
                  loginPage.Login(email, password);
             }
 
-            // Final check: User should be on Dashboard or at least not on Login/Register
+            // 4. Final check: Should arrive at Dashboard
             Wait.Until(d => d.Url.Contains("Dashboard") || !d.Url.Contains("Account/"));
+            
             Assert.That(Driver.Url, Does.Not.Contain("Login"), $"Login failed, still on Login page. URL: {Driver.Url}");
             Assert.That(Driver.Url, Does.Not.Contain("Register"), $"Registration failed, still on Register page. URL: {Driver.Url}");
         }
