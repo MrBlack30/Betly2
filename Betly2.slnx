@@ -2,5 +2,6 @@
   <Project Path="Betly.core/Betly.core.csproj" Id="20193b51-3944-4208-9eea-6a6002d91f81" />
   <Project Path="Betly.data/Betly.data.csproj" Id="12c17b1c-a658-4a61-a9bd-0f8ba766c6fc" />
   <Project Path="Betly.Mvc/Betly.Mvc.csproj" Id="e0934dcd-1ea7-4d9a-b9c4-f9d411507aca" />
+  <Project Path="Betly.Tests.Selenium/Betly.Tests.Selenium.csproj" />
   <Project Path="Betly2.API/Betly.API.csproj" />
 </Solution>
